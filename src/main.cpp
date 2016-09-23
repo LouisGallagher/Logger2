@@ -301,12 +301,12 @@ void MainWindow::recordToggle()
 
 void MainWindow::setExposure()
 {
-    logger->getOpenNI2Interface()->setAutoExposure(autoExposure->isChecked());
+    logger->getVideoSource()->setAutoExposure(autoExposure->isChecked());
 }
 
 void MainWindow::setWhiteBalance()
 {
-    logger->getOpenNI2Interface()->setAutoWhiteBalance(autoWhiteBalance->isChecked());
+    logger->getVideoSource()->setAutoWhiteBalance(autoWhiteBalance->isChecked());
 }
 
 void MainWindow::setCompressed()
@@ -371,17 +371,17 @@ void MainWindow::timerCallback()
         {
             logger = new Logger2(width, height, fps, tcp);
 
-            if(!logger->getOpenNI2Interface()->ok())
+            if(!logger->getVideoSource()->ok())
             {
                 memset(depthImage.bits(), 0, width * height * 3);
                 painter->setPen(Qt::red);
                 painter->setFont(QFont("Arial", 30));
-                painter->drawText(10, 50, "Attempting to start OpenNI2... failed!");
+                painter->drawText(10, 50, "Attempting to start video source... failed!");
                 depthLabel->setPixmap(QPixmap::fromImage(depthImage));
 
                 QMessageBox msgBox;
-                msgBox.setText("Sorry, OpenNI2 is having trouble (it's still in beta). Please try running Logger2 again.");
-                msgBox.setDetailedText(QString::fromStdString(logger->getOpenNI2Interface()->error()));
+                msgBox.setText("Sorry, no video source detected. Please try running Logger2 again.");
+                msgBox.setDetailedText(QString::fromStdString(logger->getVideoSource()->error()));
                 msgBox.exec();
                 exit(-1);
             }
@@ -403,30 +403,30 @@ void MainWindow::timerCallback()
         }
     }
 
-    int lastDepth = logger->getOpenNI2Interface()->latestDepthIndex.getValue();
+    int lastDepth = logger->getVideoSource()->latestDepthIndex.getValue();
 
     if(lastDepth == -1)
     {
         return;
     }
 
-    int bufferIndex = lastDepth % OpenNI2Interface::numBuffers;
+    int bufferIndex = lastDepth % VideoSource::numBuffers;
 
     if(bufferIndex == lastDrawn)
     {
         return;
     }
 
-    if(lastFrameTime == logger->getOpenNI2Interface()->frameBuffers[bufferIndex].second)
+    if(lastFrameTime == logger->getVideoSource()->frameBuffers[bufferIndex].second)
     {
         return;
     }
 
-    memcpy(&depthBuffer[0], logger->getOpenNI2Interface()->frameBuffers[bufferIndex].first.first, width * height * 2);
+    memcpy(&depthBuffer[0], logger->getVideoSource()->frameBuffers[bufferIndex].first.first, width * height * 2);
     
     if(!(tcp && recording))
     {
-        memcpy(rgbImage.bits(), logger->getOpenNI2Interface()->frameBuffers[bufferIndex].first.second, width * height * 3);
+        memcpy(rgbImage.bits(), logger->getVideoSource()->frameBuffers[bufferIndex].first.second, width * height * 3);
     }
 
     cv::Mat1w depth(height, width, (unsigned short *)&depthBuffer[0]);
@@ -439,7 +439,7 @@ void MainWindow::timerCallback()
     painter->setFont(QFont("Arial", 30));
     painter->drawText(10, 50, recording ? (tcp ? "Streaming & Recording" : "Recording") : "Viewing");
 
-    frameStats.push_back(abs(logger->getOpenNI2Interface()->frameBuffers[bufferIndex].second - lastFrameTime));
+    frameStats.push_back(abs(logger->getVideoSource()->frameBuffers[bufferIndex].second - lastFrameTime));
 
     if(frameStats.size() > 15)
     {
@@ -464,7 +464,7 @@ void MainWindow::timerCallback()
     std::stringstream str;
     str << (int)ceil(fps) << "fps";
 
-    lastFrameTime = logger->getOpenNI2Interface()->frameBuffers[bufferIndex].second;
+    lastFrameTime = logger->getVideoSource()->frameBuffers[bufferIndex].second;
 
     painter->setFont(QFont("Arial", 24));
 

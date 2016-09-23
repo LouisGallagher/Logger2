@@ -26,7 +26,8 @@ Logger2::Logger2(int width, int height, int fps, bool tcp)
 
     writing.assignValue(false);
 
-    openNI2Interface = new OpenNI2Interface(width, height, fps);
+    //videoSource = new OpenNI2Interface(width, height, fps);
+    videoSource = VideoSourceFactory::create();
 
     if(tcp)
     {
@@ -51,7 +52,7 @@ Logger2::~Logger2()
         cvReleaseMat(&encodedImage);
     }
 
-    delete openNI2Interface;
+    delete videoSource;
 
     if(tcp)
     {
@@ -140,14 +141,14 @@ void Logger2::loggingThread()
 {
     while(writing.getValueWait(1000))
     {
-        int lastDepth = openNI2Interface->latestDepthIndex.getValue();
+        int lastDepth = videoSource->latestDepthIndex.getValue();
 
         if(lastDepth == -1)
         {
             continue;
         }
 
-        int bufferIndex = lastDepth % OpenNI2Interface::numBuffers;
+        int bufferIndex = lastDepth % VideoSource::numBuffers;
 
         if(bufferIndex == lastWritten)
         {
@@ -166,13 +167,13 @@ void Logger2::loggingThread()
             threads.add_thread(new boost::thread(compress2,
                                                  depth_compress_buf,
                                                  &depthSize,
-                                                 (const Bytef*)openNI2Interface->frameBuffers[bufferIndex].first.first,
+                                                 (const Bytef*)videoSource->frameBuffers[bufferIndex].first.first,
                                                  width * height * sizeof(short),
                                                  Z_BEST_SPEED));
 
             threads.add_thread(new boost::thread(boost::bind(&Logger2::encodeJpeg,
                                                              this,
-                                                             (cv::Vec<unsigned char, 3> *)openNI2Interface->frameBuffers[bufferIndex].first.second)));
+                                                             (cv::Vec<unsigned char, 3> *)videoSource->frameBuffers[bufferIndex].first.second)));
 
             threads.join_all();
 
@@ -186,8 +187,8 @@ void Logger2::loggingThread()
             depthSize = width * height * sizeof(short);
             rgbSize = width * height * sizeof(unsigned char) * 3;
 
-            depthData = (unsigned char *)openNI2Interface->frameBuffers[bufferIndex].first.first;
-            rgbData = (unsigned char *)openNI2Interface->frameBuffers[bufferIndex].first.second;
+            depthData = (unsigned char *)videoSource->frameBuffers[bufferIndex].first.first;
+            rgbData = (unsigned char *)videoSource->frameBuffers[bufferIndex].first.second;
         }
 
         if(tcp)
@@ -203,7 +204,7 @@ void Logger2::loggingThread()
 
         if(logToMemory)
         {
-            memoryBuffer.addData((unsigned char *)&openNI2Interface->frameBuffers[bufferIndex].second, sizeof(int64_t));
+            memoryBuffer.addData((unsigned char *)&videoSource->frameBuffers[bufferIndex].second, sizeof(int64_t));
             memoryBuffer.addData((unsigned char *)&depthSize, sizeof(int32_t));
             memoryBuffer.addData((unsigned char *)&rgbSize, sizeof(int32_t));
             memoryBuffer.addData(depthData, depthSize);
@@ -211,7 +212,7 @@ void Logger2::loggingThread()
         }
         else
         {
-            logData((int64_t *)&openNI2Interface->frameBuffers[bufferIndex].second,
+            logData((int64_t *)&videoSource->frameBuffers[bufferIndex].second,
                     (int32_t *)&depthSize,
                     &rgbSize,
                     depthData,
@@ -224,13 +225,13 @@ void Logger2::loggingThread()
 
         if(lastTimestamp != -1)
         {
-            if(openNI2Interface->frameBuffers[bufferIndex].second - lastTimestamp > 1000000)
+            if(videoSource->frameBuffers[bufferIndex].second - lastTimestamp > 1000000)
             {
-                dropping.assignValue(std::pair<bool, int64_t>(true, openNI2Interface->frameBuffers[bufferIndex].second - lastTimestamp));
+                dropping.assignValue(std::pair<bool, int64_t>(true, videoSource->frameBuffers[bufferIndex].second - lastTimestamp));
             }
         }
 
-        lastTimestamp = openNI2Interface->frameBuffers[bufferIndex].second;
+        lastTimestamp = videoSource->frameBuffers[bufferIndex].second;
     }
 }
 

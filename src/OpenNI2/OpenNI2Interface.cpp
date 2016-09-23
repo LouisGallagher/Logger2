@@ -8,10 +8,8 @@
 #include "OpenNI2Interface.h"
 
 OpenNI2Interface::OpenNI2Interface(int inWidth, int inHeight, int fps)
- : width(inWidth),
-   height(inHeight),
-   fps(fps),
-   initSuccessful(true)
+    :VideoSource(inWidth, inHeight, fps),
+    initSuccessful(true)
 {
     //Setup
     openni::Status rc = openni::STATUS_OK;

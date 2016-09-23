@@ -17,41 +17,43 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
-#include "../ThreadMutexObject.h"
+#include "../VideoSource.h"
+//#include "../ThreadMutexObject.h"
+
 
 #ifndef OPENNI2INTERFACE_H_
 #define OPENNI2INTERFACE_H_
 
 
-class OpenNI2Interface
+class OpenNI2Interface : public VideoSource
 {
     public:
         OpenNI2Interface(int inWidth = 640, int inHeight = 480, int fps = 30);
         virtual ~OpenNI2Interface();
 
-        const int width, height, fps;
+        //const int width, height, fps;
 
         void printModes();
         bool findMode(int x, int y, int fps);
-        void setAutoExposure(bool value);
-        void setAutoWhiteBalance(bool value);
-        bool getAutoExposure();
-        bool getAutoWhiteBalance();
+        virtual void setAutoExposure(bool value);
+        virtual void setAutoWhiteBalance(bool value);
+        virtual bool getAutoExposure();
+        virtual bool getAutoWhiteBalance();
 
-        bool ok()
+        virtual bool ok()
         {
             return initSuccessful;
         }
 
-        std::string error()
+        virtual std::string error()
         {
             errorText.erase(std::remove_if(errorText.begin(), errorText.end(), &OpenNI2Interface::isTab), errorText.end());
             return errorText;
         }
 
-        static const int numBuffers = 100;
+       /* static const int numBuffers = 100;
         ThreadMutexObject<int> latestDepthIndex;
-        std::pair<std::pair<uint8_t *, uint8_t *>, int64_t> frameBuffers[numBuffers];
+        std::pair<std::pair<uint8_t *, uint8_t *>, int64_t> frameBuffers[numBuffers];*/
 
         class RGBCallback : public openni::VideoStream::NewFrameListener
         {

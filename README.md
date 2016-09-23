@@ -1,11 +1,12 @@
-Logger2
+Logger2 ()
 =======
 
-Tool for logging RGB-D data from the ASUS Xtion Pro Live with OpenNI2
+Tool for logging RGB-D data from the ASUS Xtion Pro Live with OpenNI2 and now the Intel® RealSense™ Camera R200 with 
+librealsense.
 
-Should build on Linux, MacOS and Windows. Haven't built on Windows yet though, so someone feel free try it out!
+Builds on Linux 
 
-Requires CMake, Boost, Qt4, OpenNI2, ZLIB and OpenCV. 
+Requires CMake, Boost, Qt4, OpenNI2, librealsense, ZLIB and OpenCV. 
 
 Grabs RGB and depth frames which can then be compressed (lossless ZLIB on depth and JPEG on RGB) or uncompressed. 
 
@@ -19,7 +20,7 @@ The binary format is specified in Logger2.h
 
 Run with -t to enable TCP streaming support on port 5698
 
-If you get an error about not being able to connect to the device follow these instructions (credit to John McCormac)
+If you get an error about not being able to connect to the device (ASUS Xtion Pro Live) follow these instructions (credit to John McCormac)
 
 1. Find the idVendor and idProduct by running lsusb (with example output):
 
