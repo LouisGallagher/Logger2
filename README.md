@@ -1,7 +1,7 @@
 Logger2 ()
 =======
 
-Tool for logging RGB-D data from the ASUS Xtion Pro Live with OpenNI2 and now the Intel® RealSense™ Camera R200 with 
+Tool for logging RGB-D data from the ASUS Xtion Pro Live with OpenNI2 and the Intel® RealSense™ Camera R200 with 
 librealsense.
 
 Builds on Linux 
