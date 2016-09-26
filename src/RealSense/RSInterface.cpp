@@ -94,6 +94,8 @@
  	device->stop();
 	device->disable_stream(rs::stream::depth);
  	device->disable_stream(rs::stream::color);
+ 	device->disable_stream(rs::stream::infrared);
+ 	device->disable_stream(rs::stream::infrared2);
 
  	for(int i = 0; i < numBuffers; i++)
         {
