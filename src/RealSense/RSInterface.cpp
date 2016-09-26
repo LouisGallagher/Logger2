@@ -98,9 +98,9 @@
  	device->disable_stream(rs::stream::infrared2);
 
  	for(int i = 0; i < numBuffers; i++)
-        {
-            free(frameBuffers[i].first.first);
-            free(frameBuffers[i].first.second);
-            free(rgbBuffers[i].first);
-		}
+	{
+		free(frameBuffers[i].first.first);
+		free(frameBuffers[i].first.second);
+		free(rgbBuffers[i].first);
+	}
  }
