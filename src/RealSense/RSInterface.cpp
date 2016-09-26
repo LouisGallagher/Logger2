@@ -29,7 +29,10 @@
  	device->set_frame_callback(rs::stream::depth, dcb);
  	device->set_frame_callback(rs::stream::color, ccb);
 
- 	device->set_option(rs::option::r200_lr_auto_exposure_enabled, true); // //rs::option::r200_lr_exposure, 330)
+ 	//device->set_option(rs::option::r200_lr_exposure, 130); //r200_lr_auto_exposure_enabled, true //rs::option::r200_lr_exposure, 330
+	device->set_option(rs::option::r200_emitter_enabled, true);
+	//device->set_option(rs::option::r200_depth_units, 100);
+ 
  	//start streams
  	device->start(); 
 
