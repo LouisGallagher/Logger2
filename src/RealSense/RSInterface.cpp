@@ -26,12 +26,16 @@
  	std::function<void(rs::frame)> dcb = std::bind(&RSInterface::depthCallback, this, std::placeholders::_1);
  	std::function<void(rs::frame)> ccb = std::bind(&RSInterface::colorCallback, this, std::placeholders::_1);
 
- 	device->set_frame_callback(rs::stream::depth, dcb);
- 	device->set_frame_callback(rs::stream::color, ccb);
+ 	device->set_frame_callback(rs::stream::depth, dcb); 
+ 	device->set_frame_callback(rs::stream::color, ccb); 
 
- 	//device->set_option(rs::option::r200_lr_exposure, 130); //r200_lr_auto_exposure_enabled, true //rs::option::r200_lr_exposure, 330
-	device->set_option(rs::option::r200_emitter_enabled, true);
-	 
+ 	device->set_option(rs::option::r200_lr_auto_exposure_enabled, false); //r200_lr_auto_exposure_enabled, true //rs::option::r200_lr_exposure, 330
+ 	device->set_option(rs::option::r200_emitter_enabled, true);
+	device->set_option(rs::option::r200_lr_gain, 1);
+	device->set_option(rs::option::r200_lr_exposure, 330);
+	
+	rs::apply_depth_control_preset(device, 5); // (int)rs::preset::best_quality
+ 	
  	//start streams
  	device->start(); 
 

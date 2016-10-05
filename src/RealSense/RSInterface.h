@@ -8,7 +8,7 @@
 
 #include <librealsense/rs.hpp>
 
- #include <functional>
+#include <functional>
 
 #include "../VideoSource.h"
 
@@ -43,11 +43,14 @@ class RSInterface : public VideoSource
 	public:
     	void depthCallback(rs::frame f)
     	{
+
     		lastDepthTime = f.get_timestamp() * 1000;
 
     		int bufferIndex = (latestDepthIndex.getValue() + 1) % numBuffers;
 
     		memcpy(frameBuffers[bufferIndex].first.first, f.get_data(), f.get_width() * f.get_height() * 2);
+
+            //memcpy(frameBuffers[bufferIndex].first.first, device->get_frame_data(rs::stream::depth_aligned_to_color), f.get_width() * f.get_height() * 2);
 
 			frameBuffers[bufferIndex].second = lastDepthTime;
 
