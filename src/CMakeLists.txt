@@ -18,7 +18,7 @@ qt4_wrap_cpp(main_moc_SRCS
              main.h)
 
 IF(UNIX)
-    set(CMAKE_CXX_FLAGS "-msse2 -msse3 -O3")
+    set(CMAKE_CXX_FLAGS "-msse2 -msse3 -O3 -std=c++11")
 ENDIF (UNIX)
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
