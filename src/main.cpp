@@ -1,44 +1,11 @@
 #include "main.h"
 
-int find_argument(int argc, char** argv, const char* argument_name)
-{
-    for(int i = 1; i < argc; ++i)
-    {
-        if(strcmp(argv[i], argument_name) == 0)
-        {
-            return (i);
-        }
-    }
-    return (-1);
-}
-
-int parse_argument(int argc, char** argv, const char* str, int &val)
-{
-    int index = find_argument(argc, argv, str) + 1;
-
-    if(index > 0 && index < argc)
-    {
-        val = atoi(argv[index]);
-    }
-
-    return (index - 1);
-}
-
 int main(int argc, char **argv)
 {
     QApplication app(argc, argv);
 
-    int width = 640;
-    int height = 480;
-    int fps = 30;
-    int tcp = 0;
-
-    parse_argument(argc, argv, "-w", width);
-    parse_argument(argc, argv, "-h", height);
-    parse_argument(argc, argv, "-f", fps);
-    tcp = find_argument(argc, argv, "-t") != -1;
-
-    MainWindow * window = new MainWindow(width, height, fps, tcp);
+    Options::get(argc, argv);
+    MainWindow * window = new MainWindow(Options::get().width, Options::get().height, Options::get().fps, Options::get().tcp);
 
     window->show();
 

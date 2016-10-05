@@ -46,6 +46,7 @@
 
 #include "Logger2.h"
 #include "Communicator.h"
+#include "Options.h"
 
 class MainWindow : public QWidget
 {
