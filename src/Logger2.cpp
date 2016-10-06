@@ -26,7 +26,6 @@ Logger2::Logger2(int width, int height, int fps, bool tcp)
 
     writing.assignValue(false);
 
-    //videoSource = new OpenNI2Interface(width, height, fps);
     videoSource = VideoSourceFactory::create();
 
     if(tcp)
