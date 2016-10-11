@@ -36,7 +36,6 @@
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/thread/condition_variable.hpp>
 
-//#include "OpenNI2/OpenNI2Interface.h"
 #include "MemoryBuffer.h"
 #include "TcpHandler.h"
 #include "VideoSource.h"
@@ -51,11 +50,11 @@ class Logger2
         virtual ~Logger2();
 
         void startWriting(std::string filename);
-        void stopWriting(QWidget * parent);
+        void stopWriting(QWidget * parent = 0);       
 
         VideoSource * getVideoSource()
         {
-            return videoSource; // openNI2Interface;
+            return videoSource; 
         }
 
         MemoryBuffer & getMemoryBuffer()
@@ -80,7 +79,7 @@ class Logger2
         ThreadMutexObject<std::pair<bool, int64_t> > dropping;
 
     private:
-        VideoSource * videoSource; //OpenNI2Interface * openNI2Interface;
+        VideoSource * videoSource; 
         MemoryBuffer memoryBuffer;
 
         int depth_compress_buf_size;

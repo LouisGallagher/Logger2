@@ -15,7 +15,7 @@ find_package(LibRealSense REQUIRED)
 include(${QT_USE_FILE})
  
 qt4_wrap_cpp(main_moc_SRCS
-             main.h)
+             GUI.h)
 
 IF(UNIX)
     set(CMAKE_CXX_FLAGS "-msse2 -msse3 -O3 -std=c++11")
@@ -58,6 +58,8 @@ endif()
 set(CMAKE_EXE_LINKER_FLAGS "-Wl,-rpath,. -L${CMAKE_CURRENT_BINARY_DIR}")
 
 set(srcs main.cpp
+         MainController.cpp
+         GUI.cpp
          Logger2.cpp
          Communicator.cpp
          VideoSourceFactory.cpp

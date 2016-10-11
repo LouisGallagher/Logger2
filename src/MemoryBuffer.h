@@ -128,6 +128,36 @@ class MemoryBuffer
             clear();
         }
 
+         void writeOutAndClear(std::string file, int32_t numFrames)
+        {
+            int32_t * frameCount = (int32_t *)dataChunks.front()->data;
+
+            *frameCount = numFrames;
+
+            FILE * logFile = fopen(file.c_str(), "wb+");
+
+            int64_t writtenBytes = 0;
+            std::cout << "Writing log to " << file << std::endl;
+            std::cout << " Progress: ";
+            for(std::list<DataChunk *>::iterator i = dataChunks.begin(); i != dataChunks.end(); ++i)
+            {
+                fwrite((*i)->data, (*i)->dataSize, 1, logFile);
+
+                writtenBytes += (*i)->dataSize;
+
+                double amountWritten = ((double)writtenBytes / (double)totalBytes) * 100.0;
+
+                std::cout << "\r" << "Progress: " << amountWritten << "\%"; 
+            }
+
+            std::cout << std::endl;
+
+            fflush(logFile);
+            fclose(logFile);
+
+            clear();
+        }
+
         void clear()
         {
             for(std::list<DataChunk *>::iterator i = dataChunks.begin(); i != dataChunks.end(); ++i)

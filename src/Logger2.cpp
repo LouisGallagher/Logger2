@@ -118,7 +118,8 @@ void Logger2::stopWriting(QWidget * parent)
 
     if(logToMemory)
     {
-        memoryBuffer.writeOutAndClear(filename, numFrames, parent);
+      parent?  memoryBuffer.writeOutAndClear(filename, numFrames, parent)
+               : memoryBuffer.writeOutAndClear(filename, numFrames); 
     }
     else
     {
