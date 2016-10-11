@@ -23,16 +23,20 @@ class Options
 		int headless;
 		int time;
 		int countdown;
+		int memoryRecord;
+		int compressed;
 
 	private:
 		void print_help()
 		{
-			const std::string message ="Logger2 tool for logging data capture on an ASUS Xtion Pro Live and Intel RealSense R200.\n"
+			const std::string message ="Logger2, a tool for logging data capture on an ASUS Xtion Pro Live and Intel RealSense R200.\n"
 								 "Options:\n"
 								 "\t -f <fps>: Frames per second. [Default = 30]\n"
-								 "\t -w <width>: Frame width. [Default = ]\n"
-								 "\t -h <height>: Frame height [Default =].\n"
+								 "\t -w <width>: Frame width. [Default = 640]\n"
+								 "\t -h <height>: Frame height [Default = 480].\n"
 								 "\t -t <tcp>: Enable TCP streaming support on port 5698. [Default = false]\n"
+								 "\t -m <memoryRecord>: Enable caching frames to memory. [Default = false]\n"
+								 "\t -c <compressed>: Enable frame compression. [Default = false]\n"
 								 "\t --headless : Run headless. [Default = false]\n"
 								 "\t --time : Capture time in seconds. [Default = 0]\n"
 								 "\t --countdown : Countdown till beginning of capture. [Default = 0]\n"
@@ -40,6 +44,7 @@ class Options
 
 			std::cout << message << std::endl;
 		}
+		
 		int find_argument(int argc, char** argv, const char* argument_name)
 		{
 			for(int i = 1; i < argc; ++i)
@@ -69,6 +74,8 @@ class Options
 		  height(480),
 		  fps(30),
 		  tcp(0),
+		  memoryRecord(0),
+		  compressed(0),
 		  headless(0),
 		  time(0),
 		  countdown(0)
@@ -83,6 +90,8 @@ class Options
 			parse_argument(argc, argv, "-h", height);
 			parse_argument(argc, argv, "-f", fps);
 			tcp = find_argument(argc, argv, "-t") != -1;
+			compressed = find_argument(argc, argv, "-c") != -1;
+			memoryRecord = find_argument(argc, argv, "-m") != -1;
 
 			parse_argument(argc, argv, "--time", time);
 			parse_argument(argc, argv, "--countdown", countdown);
