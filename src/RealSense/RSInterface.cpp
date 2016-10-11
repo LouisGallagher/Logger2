@@ -12,8 +12,11 @@
 	:VideoSource(inWidth, inHeight, fps)
  {
 
-  	//TODO set error string
- 	if(context.get_device_count() == 0)return;
+  	if(context.get_device_count() == 0)
+ 	{
+ 		errorMessage = "No device detected.";
+ 		return;
+ 	}
 
  	device = context.get_device(0);
 	
@@ -39,10 +42,12 @@
  	//start streams
  	device->start(); 
 
- 	//TODO set error string
- 	if(!ok())return;
-
- 	//TODO check both streams are running
+ 	
+ 	if(!ok())
+ 	{
+ 		errorMessage = "Could not initialise device.";
+ 		return;
+	}
 
  	latestDepthIndex.assignValue(-1);
  	latestRgbIndex.assignValue(-1);
@@ -57,11 +62,10 @@
 	}
  }
 
-//TODO should really have an error logging class
- std::string RSInterface::error()
- {
+std::string RSInterface::error()
+{
  	return errorMessage;
- }
+}
 
  bool RSInterface::ok()
  {
