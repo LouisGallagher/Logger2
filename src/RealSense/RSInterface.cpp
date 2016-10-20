@@ -41,12 +41,11 @@
 	}
 
 	device->set_option(rs::option::r200_emitter_enabled, true);
-
-	rs::apply_depth_control_preset(device, 5); 
- 	
+	device->set_option(rs::option::r200_depth_clamp_max, (1.0 / device->get_depth_scale()) * Options::get().depthClampMax); 
+	 	
  	//start streaming
  	device->start(); 
- 	
+ 	 
  	if(!ok())
  	{
  		errorMessage = "Could not initialise device.";
@@ -64,7 +63,7 @@
 		frameBuffers[i] = std::pair<std::pair<uint8_t *, uint8_t *>, int64_t>(std::pair<uint8_t *, uint8_t *>(newDepth, newImageDepthAligned), 0);
 		rgbBuffers[i] = std::pair<uint8_t *, int64_t>(newImage, 0);
 	}
- }
+}
 
 std::string RSInterface::error()
 {
