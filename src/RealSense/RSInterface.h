@@ -11,6 +11,7 @@
 #include <functional>
 
 #include "../VideoSource.h"
+#include "../Options.h"
 
 #ifndef RSINTERFACE_H_
 #define RSINTERFACE_H_

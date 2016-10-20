@@ -20,11 +20,14 @@ class Options
 		int width;
 		int height;
 		int tcp;
+		int gain;
+		int exposure;
 		int headless;
 		int time;
 		int countdown;
 		int memoryRecord;
 		int compressed;
+		int autoExposure;
 
 	private:
 		void print_help()
@@ -37,6 +40,8 @@ class Options
 								 "\t -t <tcp>: Enable TCP streaming support on port 5698. [Default = false]\n"
 								 "\t -m <memoryRecord>: Enable caching frames to memory. [Default = false]\n"
 								 "\t -c <compressed>: Enable frame compression. [Default = false]\n"
+								 "\t -g <gain>: Set the gain on the left and right infrared cameras (Intel RealSense R200 only) [Default = 400, Min = 100, Max = 6399]\n"
+								 "\t -e <exposure>: set the exposure of the left and right infrared cameras (Intel RealSense R200 only)[Default = 164, Min = 1, Max = 330]\n"
 								 "\t --headless : Run headless. [Default = false]\n"
 								 "\t --time : Capture time in seconds. [Default = 0]\n"
 								 "\t --countdown : Countdown till beginning of capture. [Default = 0]\n"
@@ -74,11 +79,14 @@ class Options
 		  height(480),
 		  fps(30),
 		  tcp(0),
+		  gain(400),
+		  exposure(164),
 		  memoryRecord(0),
 		  compressed(0),
 		  headless(0),
 		  time(0),
-		  countdown(0)
+		  countdown(0),
+		  autoExposure(0)
 		{
 			if(find_argument(argc, argv, "--help") != -1)
 			{
@@ -89,14 +97,16 @@ class Options
 			parse_argument(argc, argv, "-w", width);
 			parse_argument(argc, argv, "-h", height);
 			parse_argument(argc, argv, "-f", fps);
-			tcp = find_argument(argc, argv, "-t") != -1;
-			compressed = find_argument(argc, argv, "-c") != -1;
-			memoryRecord = find_argument(argc, argv, "-m") != -1;
-
+			parse_argument(argc, argv, "-g", gain);
+			parse_argument(argc, argv, "-e", exposure);
 			parse_argument(argc, argv, "--time", time);
 			parse_argument(argc, argv, "--countdown", countdown);
-			headless = find_argument(argc, argv, "--headless") != -1;
 
+			tcp = find_argument(argc, argv, "-t") != -1;
+			compressed = find_argument(argc, argv, "-c") != -1;
+			memoryRecord = find_argument(argc, argv, "-m") != -1;			
+			headless = find_argument(argc, argv, "--headless") != -1;
+			autoExposure = find_argument(argc, argv, "-g") == -1 && find_argument(argc, argv, "-e") == -1;
 		}
 
 	public:
