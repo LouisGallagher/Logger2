@@ -28,7 +28,8 @@ class Options
 		int memoryRecord;
 		int compressed;
 		int autoExposure;
-
+		double depthClampMin;
+		double depthClampMax;
 	private:
 		void print_help()
 		{
@@ -40,8 +41,10 @@ class Options
 								 "\t -t <tcp>: Enable TCP streaming support on port 5698. [Default = false]\n"
 								 "\t -m <memoryRecord>: Enable caching frames to memory. [Default = false]\n"
 								 "\t -c <compressed>: Enable frame compression. [Default = false]\n"
-								 "\t -g <gain>: Set the gain on the left and right infrared cameras (Intel RealSense R200 only) [Default = 400, Min = 100, Max = 6399]\n"
-								 "\t -e <exposure>: set the exposure of the left and right infrared cameras (Intel RealSense R200 only)[Default = 164, Min = 1, Max = 330]\n"
+								 "\t -g <gain>: Set the gain on the left and right infrared cameras (Intel RealSense R200 only). [Default = 400, Min = 100, Max = 6399]\n"
+								 "\t -e <exposure>: Set the exposure of the left and right infrared cameras (Intel RealSense R200 only). [Default = 164, Min = 1, Max = 330]\n"
+								 "\t --dcmin : Depth clamp minimum in meters (Intel RealSense R200 only). [Default = 0, Min = 0, Max = 65]\n"
+								 "\t --dcmax : Depth clamp maximum in meters (Intel RealSense R200 only). [Default = 5, Min = 0, Max = 65]\n"
 								 "\t --headless : Run headless. [Default = false]\n"
 								 "\t --time : Capture time in seconds. [Default = 0]\n"
 								 "\t --countdown : Countdown till beginning of capture. [Default = 0]\n"
@@ -74,6 +77,18 @@ class Options
 			return (index - 1);
 		}
 
+		int parse_argument(int argc, char** argv, const char* str, double &val)
+		{
+			int index = find_argument(argc, argv, str) + 1;
+
+			if(index > 0 && index < argc)
+			{
+				val = atof(argv[index]);
+			}
+
+			return (index - 1);
+		}
+
 		Options(int argc, char ** argv)
 		: width(640),
 		  height(480),
@@ -86,7 +101,9 @@ class Options
 		  headless(0),
 		  time(0),
 		  countdown(0),
-		  autoExposure(0)
+		  autoExposure(0),
+		  depthClampMin(0.0),
+		  depthClampMax(5.0)
 		{
 			if(find_argument(argc, argv, "--help") != -1)
 			{
@@ -101,6 +118,8 @@ class Options
 			parse_argument(argc, argv, "-e", exposure);
 			parse_argument(argc, argv, "--time", time);
 			parse_argument(argc, argv, "--countdown", countdown);
+			parse_argument(argc, argv, "--dcmin", depthClampMin);
+			parse_argument(argc, argv, "--dcmax", depthClampMax);
 
 			tcp = find_argument(argc, argv, "-t") != -1;
 			compressed = find_argument(argc, argv, "-c") != -1;
