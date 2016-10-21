@@ -231,7 +231,13 @@ void GUI::setMemoryRecord()
 
 void GUI::quit()
 {
-    if(QMessageBox::question(this, "Quit?", "Are you sure you want to quit?", "&No", "&Yes", QString::null, 0, 1 ))
+	QString title("Quit?");
+	QString message("Are you sure you want to quit?");
+	QString no("&no");
+	QString yes("&yes");
+	QString maybe(QString::null);
+
+	if(QMessageBox::question(this, title, message, no, yes, maybe, 0, 1 ))
     {
         if(recording)
         {

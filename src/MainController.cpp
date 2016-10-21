@@ -1,6 +1,6 @@
 #include "MainController.h"
 
-MainController::MainController(int argc, char** argv)
+MainController::MainController(int & argc, char** argv)
 : app(argc, argv)
 {
 	Options::get(argc, argv);
@@ -44,4 +44,5 @@ MainController::~MainController()
 
 	if(!Options::get().headless)
 		delete gui;
+	
 }

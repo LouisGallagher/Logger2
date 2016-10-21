@@ -15,7 +15,7 @@
 class MainController
 {
 	public:
-		MainController(int, char**);
+		MainController(int &, char**);
 		virtual ~MainController();
 
 		int launch();
