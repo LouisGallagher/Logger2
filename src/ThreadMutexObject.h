@@ -20,15 +20,14 @@ class ThreadMutexObject
         {}
 
         ThreadMutexObject(T initialValue)
-         : object(initialValue),
-           lastCopy(initialValue)
+         : object(initialValue)
         {}
 
         void assignValue(T newValue)
         {
             boost::mutex::scoped_lock lock(mutex);
 
-            object = lastCopy = newValue;
+            object = newValue;
 
             lock.unlock();
         }
@@ -63,11 +62,11 @@ class ThreadMutexObject
             lock.unlock();
         }
 
-        T getValue()
+        T getValue() const
         {
             boost::mutex::scoped_lock lock(mutex);
 
-            lastCopy = object;
+            T lastCopy = object;
 
             lock.unlock();
 
@@ -80,7 +79,7 @@ class ThreadMutexObject
 
             signal.wait(mutex);
 
-            lastCopy = object;
+            T lastCopy = object;
 
             lock.unlock();
 
@@ -93,20 +92,7 @@ class ThreadMutexObject
 
             boost::mutex::scoped_lock lock(mutex);
 
-            lastCopy = object;
-
-            lock.unlock();
-
-            return lastCopy;
-        }
-
-        T & getReferenceWait(int wait = 33000)
-        {
-            boost::this_thread::sleep(boost::posix_time::microseconds(wait));
-
-            boost::mutex::scoped_lock lock(mutex);
-
-            lastCopy = object;
+            T lastCopy = object;
 
             lock.unlock();
 
@@ -124,8 +110,7 @@ class ThreadMutexObject
 
     private:
         T object;
-        T lastCopy;
-        boost::mutex mutex;
+        mutable boost::mutex mutex;
         boost::condition_variable_any signal;
 };
 

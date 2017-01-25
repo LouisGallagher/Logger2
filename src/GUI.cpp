@@ -1,14 +1,16 @@
 #include "GUI.h"
 
 
-GUI::GUI(Logger2  & logger)
+GUI::GUI(Logger2  & logger, Streamer & streamer, VideoSource & videoSource)
  : recording(false),
+   streaming(false),
    lastDrawn(-1),
+   logger(logger),
+   streamer(streamer),
+   videoSource(videoSource),
    depthImage(Options::get().width, Options::get().height, QImage::Format_RGB888),
-   rgbImage(Options::get().width, Options::get().height, QImage::Format_RGB888),
-   logger(logger)
+   rgbImage(Options::get().width, Options::get().height, QImage::Format_RGB888)
 {
-
    	memset(depthImage.bits(), 0, Options::get().width * Options::get().height * 3);
 
    	comms = Options::get().tcp ? new Communicator : 0;
@@ -68,7 +70,7 @@ GUI::GUI(Logger2  & logger)
     autoWhiteBalance->setChecked(false);
 
     compressed = new QCheckBox("Compressed");
-    compressed->setChecked(true);
+    compressed->setChecked(Options::get().compressed);
 
     memoryRecord = new QCheckBox("Record to RAM");
     memoryRecord->setChecked(false);
@@ -88,9 +90,13 @@ GUI::GUI(Logger2  & logger)
 
     wrapperLayout->addLayout(buttonLayout);
 
-    startStop = new QPushButton(Options::get().tcp ? "Stream && Record" : "Record", this);
-    connect(startStop, SIGNAL(clicked()), this, SLOT(recordToggle()));
-    buttonLayout->addWidget(startStop);
+    record = new QPushButton("Record", this);
+    connect(record, SIGNAL(clicked()), this, SLOT(recordToggle()));
+    buttonLayout->addWidget(record);
+
+    stream = new QPushButton("Stream", this);
+    connect(stream, SIGNAL(clicked()), this, SLOT(streamToggle()));
+    buttonLayout->addWidget(stream);
 
     QPushButton * quitButton = new QPushButton("Quit", this);
     connect(quitButton, SIGNAL(clicked()), this, SLOT(quit()));
@@ -98,13 +104,15 @@ GUI::GUI(Logger2  & logger)
 
     setLayout(wrapperLayout);
 
-    startStop->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    record->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    stream->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     quitButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
-    QFont currentFont = startStop->font();
+    QFont currentFont = record->font();
     currentFont.setPointSize(currentFont.pointSize() + 8);
 
-    startStop->setFont(currentFont);
+    record->setFont(currentFont);
+    stream->setFont(currentFont);
     quitButton->setFont(currentFont);
 
     painter = new QPainter(&depthImage);
@@ -178,8 +186,9 @@ void GUI::recordToggle()
         {
             memoryRecord->setEnabled(false);
             compressed->setEnabled(false);
+            stream->setEnabled(false);
             logger.startWriting(logFile->text().toStdString());
-            startStop->setText("Stop");
+            record->setText("Stop Recording");
             recording = true;
         }
     }
@@ -188,20 +197,53 @@ void GUI::recordToggle()
         logger.stopWriting(this);
         memoryRecord->setEnabled(true);
         compressed->setEnabled(true);
-        startStop->setText(Options::get().tcp ? "Stream && Record" : "Record");
+        stream->setEnabled(true);
+        record->setText("Record");
         recording = false;
         logFile->setText(QString::fromStdString(Filenamer::get().nextFilename()));
     }
 }
+void GUI::streamToggle()
+{
+    if(!streaming)
+    {
+        if(!streamer.start())
+        {
+            QString message = QString::fromStdString("Streaming error: " + streamer.error());
+            QMessageBox msgBox;
 
+            msgBox.setText(message);
+            msgBox.exec();
+
+            return;
+        }
+
+        stream->setText("Stop Streaming");
+        streaming = true;
+        memoryRecord->setEnabled(false);
+        compressed->setEnabled(false);
+        record->setEnabled(false);
+ 
+
+    }
+    else
+    {
+        streamer.stop();
+        memoryRecord->setEnabled(true);
+        compressed->setEnabled(true);
+        record->setEnabled(true);
+        stream->setText("Stream");
+        streaming = false;
+    }
+}
 void GUI::setExposure()
 {
-    logger.getVideoSource()->setAutoExposure(autoExposure->isChecked());
+    videoSource.setAutoExposure(autoExposure->isChecked());
 }
 
 void GUI::setWhiteBalance()
 {
-    logger.getVideoSource()->setAutoWhiteBalance(autoWhiteBalance->isChecked());
+    videoSource.setAutoWhiteBalance(autoWhiteBalance->isChecked());
 }
 
 void GUI::setCompressed()
@@ -209,17 +251,20 @@ void GUI::setCompressed()
     if(compressed->isChecked())
     {
         logger.setCompressed(compressed->isChecked());
+        streamer.setCompressed(compressed->isChecked());
     }
     else if(!compressed->isChecked())
     {
         if(QMessageBox::question(this, "Compression?", "If you don't have a fast machine or an SSD hard drive you might drop frames, are you sure?", "&No", "&Yes", QString::null, 0, 1 ))
         {
             logger.setCompressed(compressed->isChecked());
+            streamer.setCompressed(compressed->isChecked());
         }
         else
         {
             compressed->setChecked(true);
             logger.setCompressed(compressed->isChecked());
+            streamer.setCompressed(compressed->isChecked());
         }
     }
 }
@@ -242,6 +287,10 @@ void GUI::quit()
         if(recording)
         {
             recordToggle();
+        }
+        if(streaming)
+        {
+            streamToggle();
         }
         this->close();
     }
@@ -266,7 +315,7 @@ void GUI::timerCallback()
 
     memoryStatus->setText(memoryInfo);
 
-    int lastDepth = logger.getVideoSource()->latestDepthIndex.getValue();
+    int lastDepth = videoSource.getLatestDepthIndex();
 
     if(lastDepth == -1)
     {
@@ -280,16 +329,16 @@ void GUI::timerCallback()
         return;
     }
 
-    if(lastFrameTime == logger.getVideoSource()->frameBuffers[bufferIndex].second)
+    if(lastFrameTime == videoSource.getFrameBuffers()[bufferIndex].second)
     {
         return;
     }
 
-    memcpy(&depthBuffer[0], logger.getVideoSource()->frameBuffers[bufferIndex].first.first, Options::get().width * Options::get().height * 2);
+    memcpy(&depthBuffer[0], videoSource.getFrameBuffers()[bufferIndex].first.first, Options::get().width * Options::get().height * 2);
     
     if(!(Options::get().tcp && recording))
     {
-        memcpy(rgbImage.bits(), logger.getVideoSource()->frameBuffers[bufferIndex].first.second, Options::get().width * Options::get().height * 3);
+        memcpy(rgbImage.bits(), videoSource.getFrameBuffers()[bufferIndex].first.second, Options::get().width * Options::get().height * 3);
     }
 
     cv::Mat1w depth(Options::get().height, Options::get().width, (unsigned short *)&depthBuffer[0]);
@@ -302,7 +351,7 @@ void GUI::timerCallback()
     painter->setFont(QFont("Arial", 30));
     painter->drawText(10, 50, recording ? (Options::get().tcp ? "Streaming & Recording" : "Recording") : "Viewing");
 
-    frameStats.push_back(abs(logger.getVideoSource()->frameBuffers[bufferIndex].second - lastFrameTime));
+    frameStats.push_back(abs(videoSource.getFrameBuffers()[bufferIndex].second - lastFrameTime));
 
     if(frameStats.size() > 15)
     {
@@ -327,7 +376,7 @@ void GUI::timerCallback()
     std::stringstream str;
     str << (int)ceil(fps) << "fps";
 
-    lastFrameTime = logger.getVideoSource()->frameBuffers[bufferIndex].second;
+    lastFrameTime = videoSource.getFrameBuffers()[bufferIndex].second;
 
     painter->setFont(QFont("Arial", 24));
 

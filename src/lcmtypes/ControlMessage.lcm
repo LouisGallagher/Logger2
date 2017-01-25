@@ -1,0 +1,15 @@
+package lcm;
+
+struct ControlMessage
+{
+	string senderName;
+	string receiverName;
+	
+	string channel;
+	string message;
+
+	float averagePacketLatency;
+	int32_t numPacketsDropped;
+
+	int32_t numPacketsSent;
+}

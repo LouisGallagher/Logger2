@@ -35,27 +35,26 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/thread/condition_variable.hpp>
+#include <boost/lockfree/spsc_queue.hpp>
+
+#include <lcm/lcm-cpp.hpp>
 
 #include "MemoryBuffer.h"
 #include "TcpHandler.h"
 #include "VideoSource.h"
 #include "VideoSourceFactory.h"
-
+#include "Streamer.h"
+#include "lcmtypes/lcm/Frame.hpp"
 #endif
 
 class Logger2
 {
     public:
-        Logger2(int width, int height, int fps, bool tcp);
+        Logger2(const VideoSource & videoSource);
         virtual ~Logger2();
 
         void startWriting(std::string filename);
         void stopWriting(QWidget * parent = 0);       
-
-        VideoSource * getVideoSource()
-        {
-            return videoSource; 
-        }
 
         MemoryBuffer & getMemoryBuffer()
         {
@@ -79,7 +78,7 @@ class Logger2
         ThreadMutexObject<std::pair<bool, int64_t> > dropping;
 
     private:
-        VideoSource * videoSource; 
+        const VideoSource & videoSource; 
         MemoryBuffer memoryBuffer;
 
         int depth_compress_buf_size;

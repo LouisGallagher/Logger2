@@ -9,8 +9,14 @@ find_package(Boost COMPONENTS thread REQUIRED)
 find_package(Boost COMPONENTS filesystem REQUIRED)
 find_package(Boost COMPONENTS system REQUIRED)
 find_package(Boost COMPONENTS date_time REQUIRED)
+find_package(Boost COMPONENTS program_options REQUIRED)
 find_package(LibRealSense REQUIRED)
+find_package(PkgConfig REQUIRED)
 
+pkg_check_modules(LCM REQUIRED lcm)
+
+file(GLOB lcmtypes lcmtypes/*.lcm)
+execute_process(COMMAND lcm-gen -x ${lcmtypes} --cpp-hpath ${CMAKE_CURRENT_SOURCE_DIR}/lcmtypes/)
 
 include(${QT_USE_FILE})
  
@@ -18,15 +24,17 @@ qt4_wrap_cpp(main_moc_SRCS
              GUI.h)
 
 IF(UNIX)
-    set(CMAKE_CXX_FLAGS "-msse2 -msse3 -O3 -std=c++11")
+    set(CMAKE_CXX_FLAGS "-msse2 -msse3 -pg -std=c++11")#-O3
 ENDIF (UNIX)
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/lcmtypes/)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/RealSense/)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/OpenNI2/Include)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(${ZLIB_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(${LIBREALSENSE_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(${LCM_INCLUDE_DIRS})
 
 
 set(Boost_USE_STATIC_LIBS OFF)
@@ -34,7 +42,7 @@ set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
 set(BOOST_ALL_DYN_LINK ON)   # force dynamic linking for all libraries
 
-set(CMAKE_CXX_FLAGS "-msse2 -msse3 -std=c++11 -O3")
+set(CMAKE_CXX_FLAGS "-msse2 -msse3 -std=c++11 -pg")#-O3
 
 #Magic hack to check if host is 32 or 64 bit
 if(APPLE)
@@ -62,13 +70,14 @@ set(srcs main.cpp
          GUI.cpp
          Logger2.cpp
          Communicator.cpp
+         Streamer.cpp
          VideoSourceFactory.cpp
          ${CMAKE_CURRENT_SOURCE_DIR}/OpenNI2/OpenNI2Interface.cpp
          ${CMAKE_CURRENT_SOURCE_DIR}/RealSense/RSInterface.cpp)
 
 add_executable(Logger2 ${main_moc_SRCS} ${srcs})
 
-target_link_libraries(Logger2                       
+target_link_libraries(Logger2                  
                       ${ZLIB_LIBRARY}
                       ${Boost_LIBRARIES}
                       ${OpenCV_LIBS} 
@@ -77,5 +86,6 @@ target_link_libraries(Logger2
                       boost_filesystem
                       boost_thread
                       OpenNI2
-                      ${LIBREALSENSE_LIBRARIES})
+                      ${LIBREALSENSE_LIBRARIES}
+                      ${LCM_LIBRARIES})
 

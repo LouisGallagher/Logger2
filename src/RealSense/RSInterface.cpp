@@ -43,7 +43,6 @@
 	device->set_option(rs::option::r200_emitter_enabled, true);
 	device->set_option(rs::option::r200_depth_clamp_max, (1.0 / device->get_depth_scale()) * Options::get().depthClampMax); 
 	 	
- 	//start streaming
  	device->start(); 
  	 
  	if(!ok())

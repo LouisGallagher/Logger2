@@ -7,17 +7,18 @@
 
 #include "Logger2.h"
 
-Logger2::Logger2(int width, int height, int fps, bool tcp)
+Logger2::Logger2(const VideoSource & videoSource)
  : dropping(std::pair<bool, int64_t>(false, -1)),
+   videoSource(videoSource),
    lastWritten(-1),
    writeThread(0),
-   width(width),
-   height(height),
-   fps(fps),
+   width(Options::get().width),
+   height(Options::get().height),
+   fps(Options::get().fps),
    logFile(0),
    numFrames(0),
-   logToMemory(false),
-   compressed(true)
+   logToMemory(Options::get().memoryRecord),
+   compressed(Options::get().compressed)
 {
     depth_compress_buf_size = width * height * sizeof(int16_t) * 4;
     depth_compress_buf = (uint8_t*)malloc(depth_compress_buf_size);
@@ -26,9 +27,7 @@ Logger2::Logger2(int width, int height, int fps, bool tcp)
 
     writing.assignValue(false);
 
-    videoSource = VideoSourceFactory::create();
-
-    if(tcp)
+    if(Options::get().tcp)
     {
         tcpBuffer = (uint8_t *)malloc(depth_compress_buf_size + width * height * 3);
         this->tcp = new TcpHandler(5698);
@@ -50,8 +49,6 @@ Logger2::~Logger2()
     {
         cvReleaseMat(&encodedImage);
     }
-
-    delete videoSource;
 
     if(tcp)
     {
@@ -91,7 +88,7 @@ void Logger2::startWriting(std::string filename)
 
     numFrames = 0;
 
-    if(logToMemory)
+    if(Options::get().memoryRecord)
     {
         memoryBuffer.clear();
         memoryBuffer.addData((unsigned char *)&numFrames, sizeof(int32_t));
@@ -116,7 +113,7 @@ void Logger2::stopWriting(QWidget * parent)
 
     dropping.assignValue(std::pair<bool, int64_t>(false, -1));
 
-    if(logToMemory)
+    if(Options::get().memoryRecord)
     {
       parent?  memoryBuffer.writeOutAndClear(filename, numFrames, parent)
                : memoryBuffer.writeOutAndClear(filename, numFrames); 
@@ -141,7 +138,7 @@ void Logger2::loggingThread()
 {
     while(writing.getValueWait(1000))
     {
-        int lastDepth = videoSource->latestDepthIndex.getValue();
+        int lastDepth = videoSource.getLatestDepthIndex();
 
         if(lastDepth == -1)
         {
@@ -167,13 +164,13 @@ void Logger2::loggingThread()
             threads.add_thread(new boost::thread(compress2,
                                                  depth_compress_buf,
                                                  &depthSize,
-                                                 (const Bytef*)videoSource->frameBuffers[bufferIndex].first.first,
+                                                 (const Bytef*)videoSource.getFrameBuffers()[bufferIndex].first.first,
                                                  width * height * sizeof(short),
                                                  Z_BEST_SPEED));
 
             threads.add_thread(new boost::thread(boost::bind(&Logger2::encodeJpeg,
                                                              this,
-                                                             (cv::Vec<unsigned char, 3> *)videoSource->frameBuffers[bufferIndex].first.second)));
+                                                             (cv::Vec<unsigned char, 3> *)videoSource.getFrameBuffers()[bufferIndex].first.second)));
 
             threads.join_all();
 
@@ -184,14 +181,14 @@ void Logger2::loggingThread()
         }
         else
         {
-            depthSize = width * height * sizeof(short);
+            depthSize = width * height * sizeof(unsigned char) * 2;//sizeof(short);
             rgbSize = width * height * sizeof(unsigned char) * 3;
 
-            depthData = (unsigned char *)videoSource->frameBuffers[bufferIndex].first.first;
-            rgbData = (unsigned char *)videoSource->frameBuffers[bufferIndex].first.second;
+            depthData = (unsigned char *)videoSource.getFrameBuffers()[bufferIndex].first.first;
+            rgbData = (unsigned char *)videoSource.getFrameBuffers()[bufferIndex].first.second;
         }
 
-        if(tcp)
+        if(Options::get().tcp)
         {
             int * myMsg = (int *)&tcpBuffer[0];
             myMsg[0] = rgbSize;
@@ -202,9 +199,9 @@ void Logger2::loggingThread()
             tcp->sendData(tcpBuffer, sizeof(int) + rgbSize + depthSize);
         }
 
-        if(logToMemory)
+        if(Options::get().memoryRecord)
         {
-            memoryBuffer.addData((unsigned char *)&videoSource->frameBuffers[bufferIndex].second, sizeof(int64_t));
+            memoryBuffer.addData((unsigned char *)&videoSource.getFrameBuffers()[bufferIndex].second, sizeof(int64_t));
             memoryBuffer.addData((unsigned char *)&depthSize, sizeof(int32_t));
             memoryBuffer.addData((unsigned char *)&rgbSize, sizeof(int32_t));
             memoryBuffer.addData(depthData, depthSize);
@@ -212,7 +209,7 @@ void Logger2::loggingThread()
         }
         else
         {
-            logData((int64_t *)&videoSource->frameBuffers[bufferIndex].second,
+            logData((int64_t *)&videoSource.getFrameBuffers()[bufferIndex].second,
                     (int32_t *)&depthSize,
                     &rgbSize,
                     depthData,
@@ -225,13 +222,13 @@ void Logger2::loggingThread()
 
         if(lastTimestamp != -1)
         {
-            if(videoSource->frameBuffers[bufferIndex].second - lastTimestamp > 1000000)
+            if(videoSource.getFrameBuffers()[bufferIndex].second - lastTimestamp > 1000000)
             {
-                dropping.assignValue(std::pair<bool, int64_t>(true, videoSource->frameBuffers[bufferIndex].second - lastTimestamp));
+                dropping.assignValue(std::pair<bool, int64_t>(true, videoSource.getFrameBuffers()[bufferIndex].second - lastTimestamp));
             }
         }
 
-        lastTimestamp = videoSource->frameBuffers[bufferIndex].second;
+        lastTimestamp = videoSource.getFrameBuffers()[bufferIndex].second;
     }
 }
 

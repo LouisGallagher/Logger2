@@ -16,12 +16,6 @@
 
  class VideoSource
  {
- 	protected:
- 		VideoSource(int inWidth = 640, int inHeight = 480, int fps = 30)
- 			:width(inWidth),
- 			 height(inHeight),
- 			 fps(fps){}
-
  	public:
  		virtual ~VideoSource(){}
 
@@ -36,8 +30,28 @@
  		const int width;
  		const int height;
  		const int fps;
- 		ThreadMutexObject<int> latestDepthIndex;
+
+ 		typedef std::pair<std::pair<uint8_t *, uint8_t *>, int64_t> FrameBuffers[numBuffers];
+
+ 		const FrameBuffers& getFrameBuffers() const
+ 		{
+ 			return frameBuffers;
+ 		}
+
+ 		int getLatestDepthIndex() const 
+ 		{
+ 			return latestDepthIndex.getValue();
+ 		}
+
+	protected:
+ 		VideoSource(int inWidth = 640, int inHeight = 480, int fps = 30)
+ 		:width(inWidth),
+ 		height(inHeight),
+ 		fps(fps){}
+
+		ThreadMutexObject<int> latestDepthIndex;
+
  		std::pair<std::pair<uint8_t *, uint8_t *>, int64_t> frameBuffers[numBuffers];
- };
+};
 
  #endif // VIDEOSOURCE_H_

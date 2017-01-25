@@ -21,7 +21,9 @@ class MainController
 		int launch();
 
 	private:
+		VideoSource * videoSource;
 		Logger2 * logger;
+		Streamer * streamer;
 		QApplication app;
 		GUI * gui;
 };

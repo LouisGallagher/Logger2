@@ -40,6 +40,7 @@
 #include <math.h>
 
 #include "Logger2.h"
+#include "Streamer.h"
 #include "Communicator.h"
 #include "Options.h"
 #include "Filenamer.h"
@@ -49,12 +50,13 @@ class GUI : public QWidget
     Q_OBJECT;
 
     public:
-        GUI(Logger2 &);
+        GUI(Logger2 & logger, Streamer & streamer, VideoSource & videoSource);
         virtual ~GUI();
 
     private slots:
         void timerCallback();
         void recordToggle();
+        void streamToggle();
         void quit();
         void fileBrowse();
         void dateFilename();
@@ -65,13 +67,17 @@ class GUI : public QWidget
 
     private:
         Logger2 & logger;
+        Streamer & streamer;
+        VideoSource & videoSource;
 
         QImage depthImage;
         QImage rgbImage;
 
         bool recording;
+        bool streaming;
 
-        QPushButton * startStop;
+        QPushButton * stream;
+        QPushButton * record;
         QPushButton * browseButton;
         QPushButton * dateNameButton;
         QCheckBox * autoExposure;
