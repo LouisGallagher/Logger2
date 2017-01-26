@@ -3,7 +3,8 @@ package lcm;
 struct Frame
 {
 	boolean compressed;
-
+	boolean last;
+	
 	int32_t depthSize;
 	int32_t imageSize;
 
