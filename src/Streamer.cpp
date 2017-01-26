@@ -107,7 +107,7 @@ void Streamer::stream()
 										  					depthCompressBuffer,
 										  					&depthSize,
 										  					videoSource.getFrameBuffers()[bufferIndex].first.first,					
-										  					Options::get().width * Options::get().height,
+										  					Options::get().width * Options::get().height * 2,
 										   					1));
 
 			compressionThreads.add_thread(new boost::thread(boost::bind(&Streamer::encodeJpeg,
