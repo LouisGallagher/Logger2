@@ -150,14 +150,9 @@ void Streamer::stream()
         lastTimestamp = videoSource.getFrameBuffers()[bufferIndex].second;
 	}
 
-	unsigned char * depthData = (unsigned char *)calloc( Options::get().width * Options::get().height * 2, sizeof(unsigned char));
-	unsigned char * rgbData = (unsigned char *)calloc(Options::get().width * Options::get().height * 3, sizeof(unsigned char));
-	
 	lcm::Frame f;
-    f.depthSize = Options::get().width * Options::get().height * 2;
-    f.imageSize = Options::get().width * Options::get().height * 3;
-    f.depth.assign(depthData, depthData + f.depthSize);
-    f.image.assign(rgbData, rgbData + f.imageSize); 
+    f.depthSize = 0;
+    f.imageSize = 0;
     f.timestamp = -1;
     f.frameNumber = -1;
     f.compressed = false;
