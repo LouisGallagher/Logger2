@@ -64,6 +64,7 @@ class GUI : public QWidget
         void setWhiteBalance();
         void setCompressed();
         void setMemoryRecord();
+        void closeEvent(QCloseEvent *event);
 
     private:
         Logger2 & logger;

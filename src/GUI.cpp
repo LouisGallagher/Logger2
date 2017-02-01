@@ -127,7 +127,15 @@ GUI::GUI(Logger2  & logger, Streamer & streamer, VideoSource & videoSource)
     connect(timer, SIGNAL(timeout()), this, SLOT(timerCallback()));
     timer->start(15);
 }
+void GUI::closeEvent(QCloseEvent *event)
+{
+    if(streaming)
+        streamer.stop();
+    if(recording)
+        logger.stopWriting();
 
+    event->accept();
+}
 GUI::~GUI()
 {
     timer->stop();
